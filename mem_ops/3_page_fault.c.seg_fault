@@ -1,0 +1,29 @@
+#include <stdio.h>
+#include <stdlib.h>
+int main()
+{
+    long long unsigned int size = 512*1024*1024;
+    long long unsigned int i;
+    volatile long long unsigned int a, b;
+    long long unsigned int total_cycles=0;
+    volatile unsigned hi, lo;
+    volatile unsigned hi1, lo1;
+    int width = 512;
+    int arr1[size];
+    int arr2[size];
+    int temp;
+    for(i=0; i<size; i++){
+        arr1[i] = rand()%10;
+    }
+    for(i=0; i<size; i++){
+        arr2[i] = rand()%10;
+    }
+    __asm__ __volatile__ ("cpuid");
+    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+    temp = arr1[50];
+    __asm__ __volatile__ ("rdtscp" : "=a"(lo1), "=d"(hi1));
+    __asm__ __volatile__ ("cpuid");
+    a = ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
+    b = ( (unsigned long long)lo1)|( ((unsigned long long)hi1)<<32 );
+    printf("%llu \n", b-a);
+}

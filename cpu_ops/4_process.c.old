@@ -1,0 +1,39 @@
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/wait.h>
+int main()
+{
+  int x = 0;
+  volatile unsigned long long a, b;
+  volatile unsigned long long a1, b1;
+  volatile unsigned hi,lo;
+  volatile unsigned hi1,lo1;
+  int i = 0;
+  int status;
+  volatile long double cpu_speed = 2592124150;
+  __asm__ __volatile__ ("cpuid");
+  __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+  a = ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
+  pid_t pid;
+  pid = fork();
+  __asm__ __volatile__ ("cpuid");
+  if(pid > 0)
+  {
+	  __asm__ __volatile__ ("rdtscp" : "=a"(lo1), "=d"(hi1));
+	  __asm__ __volatile__ ("cpuid");
+	  b1 = ( (unsigned long long)lo1)|( ((unsigned long long)hi1)<<32 );
+          wait(&status);
+	  __asm__ __volatile__ ("rdtscp" : "=a"(lo), "=d"(hi));
+	  __asm__ __volatile__ ("cpuid");
+	  b = ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
+	  printf("Overhead for process creation: %llu cycles\n", (b1-a));
+	  printf("Overhead for process creation: %.12Lf seconds\n", (long double)(b1-a)/cpu_speed);
+	  printf("Overhead for process creation child termination: %llu cycles\n", (b-a));
+	  printf("Overhead for process creation child termination: %.12Lf seconds\n", (long double)(b-a)/cpu_speed);
+  }
+  else
+  {
+   	  x += 1;
+  }
+}
